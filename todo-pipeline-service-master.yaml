@@ -1,0 +1,34 @@
+node { 
+
+// change git id and git url to your own
+stage('download code') 
+git credentialsId: 'git', url: 'https://github.com/anilbidari/todorest24.git' 
+
+stage('install maven')
+sh 'sudo apt install maven -y'
+
+stage('compile code')
+sh 'mvn compile'
+
+//change sonar url , token , project name 
+stage('sonar analysis')
+sh 'mvn sonar:sonar -Dsonar.projectKey=cloudenabled -Dsonar.host.url=http://18.140.97.76:9000 -Dsonar.login=52f25eea6c337e4cfcb6c45b63dda2574492af1d'
+
+stage('run unit test')
+sh 'mvn test'
+
+stage('generate report')
+sh 'mvn surefire-report:report'
+
+stage('create package')
+sh 'mvn package'
+
+stage('archive to jenkins')
+archiveArtifacts artifacts: 'target/todorest-0.0.1-SNAPSHOT.jar', followSymlinks: false
+
+stage('deploy app on master node')
+sh 'nohup java -jar target/todorest-0.0.1-SNAPSHOT.jar /tmp 2>> /dev/null >> /dev/null &'
+
+stage('check app ready')
+sh 'curl http://localhost:8080'
+}
