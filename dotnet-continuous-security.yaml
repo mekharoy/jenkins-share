@@ -1,0 +1,11 @@
+node('node1'){
+    
+stage('download code')
+git branch: 'main', url: 'https://github.com/anilbidari/dotnet7.git'
+
+stage('sonar analysis')
+sh 'dotnet sonarscanner begin /k:"dotnet" /d:sonar.host.url="http://13.251.81.195:9000"  /d:sonar.login="207858e7eaa1be99a296ef1a52dc1d11567f8da9"'
+sh 'dotnet build'
+sh 'dotnet sonarscanner end /d:sonar.login="207858e7eaa1be99a296ef1a52dc1d11567f8da9"'
+
+}
