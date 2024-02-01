@@ -1,0 +1,7 @@
+node('node1'){
+stage ('download python.git')
+git 'https://github.com/anilbidari/python.git'
+stage ('scan')
+sh 'sonar-scanner -Dsonar.projectKey=Python -Dsonar.sources=. -Dsonar.host.url=http://13.251.81.195:9000 -Dsonar.login=b56eb08621a5b830df0d2627b79bb3c0d942f516'
+}
+
