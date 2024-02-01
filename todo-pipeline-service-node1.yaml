@@ -1,0 +1,53 @@
+node('node1'){
+    stage('variables')
+    {
+
+sh '''echo "BUILD_NUMBER" :: $BUILD_NUMBER
+echo "BUILD_ID" :: $BUILD_ID
+echo "BUILD_DISPLAY_NAME" :: $BUILD_DISPLAY_NAME
+echo "JOB_NAME" :: $JOB_NAME
+echo "JOB_BASE_NAME" :: $JOB_BASE_NAME
+echo "BUILD_TAG" :: $BUILD_TAG
+echo "EXECUTOR_NUMBER" :: $EXECUTOR_NUMBER
+echo "NODE_NAME" :: $NODE_NAME
+echo "NODE_LABELS" :: $NODE_LABELS
+echo "WORKSPACE" :: $WORKSPACE
+echo "JENKINS_HOME" :: $JENKINS_HOME
+echo "JENKINS_URL" :: $JENKINS_URL
+echo "BUILD_URL" ::$BUILD_URL
+echo "JOB_URL" :: $JOB_URL'''
+}
+
+node('node1') { 
+
+stage('download code')
+git credentialsId: 'git', url: 'https://github.com/anilbidari/todorest24.git' 
+
+stage('compile code')
+sh 'mvn compile'
+
+stage('sonar analysis')
+sh 'mvn sonar:sonar -Dsonar.projectKey=cloudenabled -Dsonar.host.url=http://18.140.97.76:9000 -Dsonar.login=52f25eea6c337e4cfcb6c45b63dda2574492af1d'
+
+stage('run unit test')
+sh 'mvn test'
+
+stage('generate report')
+sh 'mvn surefire-report:report'
+
+stage('create package')
+sh 'mvn package'
+
+stage('upload to nexus')
+sh 'curl -v -u admin:admin123 --upload-file target/todorest-0.0.1-SNAPSHOT.jar http://18.138.231.82:8081/repository/maven-releases/todorest-anil-$BUILD_NUMBER.jar'
+stage('archive to jenkins')
+archiveArtifacts artifacts: 'target/todorest-0.0.1-SNAPSHOT.jar', followSymlinks: false
+
+stage('deploy app on master node')
+sh 'nohup java -jar target/todorest-0.0.1-SNAPSHOT.jar /tmp 2>> /dev/null >> /dev/null &'
+
+stage('check app ready')
+sh 'curl http://localhost:8080'
+}
+
+}
