@@ -1,0 +1,43 @@
+node ('node1'){
+    stage('variables')
+    {
+ 
+sh '''echo "BUILD_NUMBER" :: $BUILD_NUMBER
+echo "BUILD_ID" :: $BUILD_ID
+echo "BUILD_DISPLAY_NAME" :: $BUILD_DISPLAY_NAME
+echo "JOB_NAME" :: $JOB_NAME
+echo "JOB_BASE_NAME" :: $JOB_BASE_NAME
+echo "BUILD_TAG" :: $BUILD_TAG
+echo "EXECUTOR_NUMBER" :: $EXECUTOR_NUMBER
+echo "NODE_NAME" :: $NODE_NAME
+echo "NODE_LABELS" :: $NODE_LABELS
+echo "WORKSPACE" :: $WORKSPACE
+echo "JENKINS_HOME" :: $JENKINS_HOME
+echo "JENKINS_URL" :: $JENKINS_URL
+echo "BUILD_URL" ::$BUILD_URL
+echo "JOB_URL" :: $JOB_URL'''
+}
+}
+
+
+
+
+node ('node1') {
+    
+stage('download source code')
+git credentialsId: 'git', url: 'https://github.com/anilbidari/todocucumber-2024.git'
+
+
+stage('cucumber test automation')
+sh 'mvn test verify -Dbase.url="18.140.97.76:8080"'
+
+
+stage('zip the reports')
+sh 'zip -r cu-anil-$BUILD_NUMBER.zip target*'
+
+
+stage('upload to nexus')
+sh 'curl -v -u admin:admin123 --upload-file cu-anil-$BUILD_NUMBER.zip http://18.138.231.82:8081/repository/maven-releases/'
+
+
+}
